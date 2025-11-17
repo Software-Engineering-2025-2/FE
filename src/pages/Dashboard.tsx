@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import "../styles/dashboard.css";
+import AdminLayout from "../components/common/AdminLayout";
+import StudentActionButtons from "../components/Dashboard/StudentActionButtons";
+import StudentListTable from "../components/Dashboard/StudentListTable";
+import Pagination from "../components/common/Pagination";
+import "../styles/common.css";
 
 interface Student {
   id: string;
@@ -12,8 +15,6 @@ interface Student {
 }
 
 export default function Dashboard() {
-  const location = useLocation();
-
   // localStorage에서 학생 데이터 가져오기 또는 기본 데이터 사용
   const getInitialStudents = (): Student[] => {
     const stored = localStorage.getItem("students");
@@ -76,146 +77,21 @@ export default function Dashboard() {
   };
 
   return (
-    <div id="dashboard" className="dashboard-page">
-      <div className="dashboard-content">
-        <div className="dashboard">
-          <div className="sidebar">
-            <div className="sidebar-header">
-              <div className="sidebar-header-title">메뉴</div>
-              <div className="sidebar-admin-info">
-                <div className="admin-name">
-                  관리자: {localStorage.getItem("adminEmail") || "홍길동님"}
-                </div>
-                <button
-                  className="sidebar-logout-btn"
-                  onClick={() => {
-                    localStorage.removeItem("isAdmin");
-                    localStorage.removeItem("adminEmail");
-                    window.location.href = "/login";
-                  }}
-                >
-                  로그아웃
-                </button>
-              </div>
-            </div>
-            <ul className="sidebar-menu">
-              <li>
-                <Link
-                  to="/dashboard"
-                  className={location.pathname === "/dashboard" ? "active" : ""}
-                >
-                  📋 학생 목록 관리
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/survey-management"
-                  className={
-                    location.pathname === "/survey-management" ? "active" : ""
-                  }
-                >
-                  📝 매칭 설문 관리
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/matching"
-                  className={location.pathname === "/matching" ? "active" : ""}
-                >
-                  ⚡ 매칭 실행
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/results"
-                  className={location.pathname === "/results" ? "active" : ""}
-                >
-                  📊 매칭 결과 보기
-                </Link>
-              </li>
-            </ul>
-          </div>
+    <AdminLayout>
+      <div className="page-title">학생 목록 관리</div>
 
-          <div className="main-content">
-            <div className="page-title">학생 목록 관리</div>
+      <StudentActionButtons
+        onUploadExcel={handleUploadExcel}
+        onAddStudent={handleAddStudent}
+      />
 
-            <div className="action-buttons">
-              <button
-                className="btn-success"
-                id="upload-excel"
-                onClick={handleUploadExcel}
-              >
-                📁 엑셀 파일 업로드
-              </button>
-              <button
-                className="btn-secondary"
-                id="add-student"
-                onClick={handleAddStudent}
-              >
-                ➕ 개별 학생 추가
-              </button>
-            </div>
+      <StudentListTable
+        students={students}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
-            <table className="data-table" id="student-table">
-              <thead>
-                <tr>
-                  <th>학번</th>
-                  <th>이름</th>
-                  <th>성별</th>
-                  <th>이메일</th>
-                  <th>생년월일</th>
-                  <th>등록일</th>
-                  <th>작업</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student.id}>
-                    <td>{student.id}</td>
-                    <td>{student.name}</td>
-                    <td>{student.gender}</td>
-                    <td>{student.email}</td>
-                    <td>{student.birthDate}</td>
-                    <td>{student.registerDate}</td>
-                    <td>
-                      <button
-                        className="btn-small btn-edit"
-                        onClick={() => handleEdit(student.id)}
-                      >
-                        수정
-                      </button>
-                      <button
-                        className="btn-small btn-delete"
-                        onClick={() => handleDelete(student.id)}
-                      >
-                        삭제
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="pagination">
-              <button className="pagination-btn" data-page="prev">
-                이전
-              </button>
-              <button className="pagination-btn active" data-page="1">
-                1
-              </button>
-              <button className="pagination-btn" data-page="2">
-                2
-              </button>
-              <button className="pagination-btn" data-page="3">
-                3
-              </button>
-              <button className="pagination-btn" data-page="next">
-                다음
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <Pagination />
+    </AdminLayout>
   );
 }

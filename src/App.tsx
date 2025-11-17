@@ -5,12 +5,11 @@ import {
   Navigate,
 } from "react-router-dom";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
 import Survey from "./pages/Survey";
 import Results from "./pages/Results";
 import SurveyManagement from "./pages/SurveyManagement";
 import Matching from "./pages/Matching";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 import "./styles/common.css";
 import "./App.css";
 
@@ -21,14 +20,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
           <Route path="/survey/:surveyId" element={<Survey />} />
           <Route path="/survey" element={<Survey />} />
           <Route

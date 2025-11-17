@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import AdminLayout from "../components/common/AdminLayout";
+import SurveyListTable from "../components/SurveyManagement/SurveyListTable";
+import SurveyForm from "../components/SurveyManagement/SurveyForm";
 import "../styles/survey-management.css";
 
 interface Survey {
@@ -26,8 +28,6 @@ interface Question {
 }
 
 export default function SurveyManagement() {
-  const location = useLocation();
-
   // localStorage에서 설문 목록 가져오기
   const getSurveys = (): Survey[] => {
     const stored = localStorage.getItem("surveys");
@@ -51,6 +51,140 @@ export default function SurveyManagement() {
     { id: 6, text: "전공", type: "text-input" },
     { id: 7, text: "특이사항 또는 요청사항", type: "text-input" },
   ];
+
+  // 예시 데이터 초기화 함수
+  const handleInitializeExampleData = () => {
+    if (
+      !confirm(
+        "예시 데이터를 초기화하시겠습니까? 기존 예시 설문(ID: 1)이 있으면 삭제되고 새로 생성됩니다."
+      )
+    ) {
+      return;
+    }
+
+    const surveyId = 1;
+    const existingSurveys = getSurveys();
+
+    // 기존 예시 설문(ID: 1) 삭제
+    const filteredSurveys = existingSurveys.filter((s) => s.id !== surveyId);
+
+    // 예시 설문 관련 응답 데이터도 삭제
+    const studentIds = [
+      "2021112018",
+      "2021112019",
+      "2021112020",
+      "2021112021",
+      "2021112022",
+    ];
+    studentIds.forEach((studentId) => {
+      localStorage.removeItem(`survey_${surveyId}_${studentId}`);
+      localStorage.removeItem(`survey_submitted_${surveyId}_${studentId}`);
+    });
+
+    // 매칭 결과도 삭제
+    localStorage.removeItem(`matchingResults_${surveyId}`);
+    localStorage.removeItem(`matchingExecuted_${surveyId}`);
+
+    // 새 예시 설문 생성
+    const exampleSurvey: Survey = {
+      id: surveyId,
+      title: "2025년 봄학기 신입생 룸메이트 매칭 설문",
+      createdDate: "2024-11-17",
+      deadline: "2024-12-31",
+      status: "active",
+      studentIds: [
+        "2021112018",
+        "2021112019",
+        "2021112020",
+        "2021112021",
+        "2021112022",
+      ],
+      students: [
+        { id: "2021112018", name: "박지현", gender: "여" },
+        { id: "2021112019", name: "김민수", gender: "남" },
+        { id: "2021112020", name: "이서연", gender: "여" },
+        { id: "2021112021", name: "최동현", gender: "남" },
+        { id: "2021112022", name: "정수진", gender: "여" },
+      ],
+      questions: fixedQuestions,
+    };
+
+    const updatedSurveys = [...filteredSurveys, exampleSurvey];
+    setSurveys(updatedSurveys);
+    localStorage.setItem("surveys", JSON.stringify(updatedSurveys));
+
+    // 설문 응답 데이터 추가 (4명 완료)
+    const exampleResponses = [
+      {
+        studentId: "2021112018",
+        studentName: "박지현",
+        wakeup: "6to8",
+        bedtime: "10to12",
+        smoking: "no",
+        sleepHabits: "no",
+        mbti: "ENFP",
+        major: "컴퓨터공학과",
+        specialNotes: "조용한 환경을 선호합니다.",
+        submittedAt: new Date().toISOString(),
+      },
+      {
+        studentId: "2021112019",
+        studentName: "김민수",
+        wakeup: "before6",
+        bedtime: "before10",
+        smoking: "no",
+        sleepHabits: "yes",
+        mbti: "ISTJ",
+        major: "전기전자공학과",
+        specialNotes: "규칙적인 생활을 좋아합니다.",
+        submittedAt: new Date().toISOString(),
+      },
+      {
+        studentId: "2021112020",
+        studentName: "이서연",
+        wakeup: "8to10",
+        bedtime: "12to2",
+        smoking: "no",
+        sleepHabits: "no",
+        mbti: "ISFP",
+        major: "디자인학과",
+        specialNotes: "밤에 공부하는 편입니다.",
+        submittedAt: new Date().toISOString(),
+      },
+      {
+        studentId: "2021112021",
+        studentName: "최동현",
+        wakeup: "6to8",
+        bedtime: "10to12",
+        smoking: "no",
+        sleepHabits: "no",
+        mbti: "ENTP",
+        major: "경영학과",
+        specialNotes: "활발한 대화를 좋아합니다.",
+        submittedAt: new Date().toISOString(),
+      },
+    ];
+
+    // 각 응답을 localStorage에 저장
+    exampleResponses.forEach((response) => {
+      localStorage.setItem(
+        `survey_${surveyId}_${response.studentId}`,
+        JSON.stringify(response)
+      );
+      localStorage.setItem(
+        `survey_submitted_${surveyId}_${response.studentId}`,
+        "true"
+      );
+    });
+
+    // 설문 목록 새로고침
+    const refreshedSurveys = getSurveys();
+    setSurveys(refreshedSurveys);
+
+    alert(
+      "예시 데이터가 추가되었습니다!\n- 설문 1개 (학생 5명)\n- 설문 완료: 4명"
+    );
+  };
 
   const [surveys, setSurveys] = useState<Survey[]>(getSurveys());
   const [surveyTitle, setSurveyTitle] = useState("");
@@ -176,268 +310,44 @@ export default function SurveyManagement() {
   };
 
   return (
-    <div id="survey-management" className="dashboard-page">
-      <div className="dashboard-content">
-        <div className="dashboard">
-          <div className="sidebar">
-            <div className="sidebar-header">
-              <div className="sidebar-header-title">메뉴</div>
-              <div className="sidebar-admin-info">
-                <div className="admin-name">
-                  관리자: {localStorage.getItem("adminEmail") || "홍길동님"}
-                </div>
-                <button
-                  className="sidebar-logout-btn"
-                  onClick={() => {
-                    localStorage.removeItem("isAdmin");
-                    localStorage.removeItem("adminEmail");
-                    window.location.href = "/login";
-                  }}
-                >
-                  로그아웃
-                </button>
-              </div>
-            </div>
-            <ul className="sidebar-menu">
-              <li>
-                <Link
-                  to="/dashboard"
-                  className={location.pathname === "/dashboard" ? "active" : ""}
-                >
-                  📋 학생 목록 관리
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/survey-management"
-                  className={
-                    location.pathname === "/survey-management" ? "active" : ""
-                  }
-                >
-                  📝 매칭 설문 관리
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/matching"
-                  className={location.pathname === "/matching" ? "active" : ""}
-                >
-                  ⚡ 매칭 실행
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/results"
-                  className={location.pathname === "/results" ? "active" : ""}
-                >
-                  📊 매칭 결과 보기
-                </Link>
-              </li>
-            </ul>
-          </div>
+    <AdminLayout>
+      <div className="page-title">매칭 설문 관리</div>
 
-          <div className="main-content">
-            <div className="page-title">매칭 설문 관리</div>
-
-            <div className="survey-management-section existing-surveys-table">
-              <h3>📋 기존 설문 목록</h3>
-              <table className="data-table" id="existing-surveys-table">
-                <thead>
-                  <tr>
-                    <th>설문 제목</th>
-                    <th>생성일</th>
-                    <th>마감일</th>
-                    <th>상태</th>
-                    <th>작업</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {surveys.map((survey) => (
-                    <tr key={survey.id}>
-                      <td>{survey.title}</td>
-                      <td>{survey.createdDate}</td>
-                      <td>{survey.deadline}</td>
-                      <td>
-                        <span className={`survey-status ${survey.status}`}>
-                          {survey.status === "active" ? "활성" : "비활성"}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn-small btn-edit btn-edit-survey"
-                          onClick={() => handleEditSurvey(survey.id)}
-                        >
-                          수정
-                        </button>
-                        <button
-                          className="btn-small btn-delete btn-delete-survey"
-                          onClick={() => handleDeleteSurvey(survey.id)}
-                        >
-                          삭제
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="survey-management-section">
-              <h3>➕ 새 설문 생성</h3>
-
-              <div className="form-group">
-                <label>설문 제목</label>
-                <input
-                  type="text"
-                  id="survey-title"
-                  placeholder="예: 2025년 봄학기 신입생 매칭 설문"
-                  value={surveyTitle}
-                  onChange={(e) => setSurveyTitle(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>설문 마감일</label>
-                <input
-                  type="date"
-                  id="survey-deadline"
-                  value={surveyDeadline}
-                  onChange={(e) => setSurveyDeadline(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>참여 학생 목록 ({surveyStudents.length}명)</label>
-                <div className="survey-student-management">
-                  <div className="student-add-section">
-                    <div className="action-buttons">
-                      <button
-                        className="btn-success"
-                        onClick={handleUploadExcel}
-                      >
-                        📁 엑셀 파일 업로드
-                      </button>
-                      <button
-                        className="btn-secondary"
-                        onClick={handleAddStudent}
-                      >
-                        ➕ 개별 학생 추가
-                      </button>
-                    </div>
-
-                    <div className="student-add-form">
-                      <div className="form-row">
-                        <div className="form-group-small">
-                          <label>학번 *</label>
-                          <input
-                            type="text"
-                            placeholder="학번"
-                            value={newStudentId}
-                            onChange={(e) => setNewStudentId(e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group-small">
-                          <label>이름 *</label>
-                          <input
-                            type="text"
-                            placeholder="이름"
-                            value={newStudentName}
-                            onChange={(e) => setNewStudentName(e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group-small">
-                          <label>성별 *</label>
-                          <select
-                            value={newStudentGender}
-                            onChange={(e) =>
-                              setNewStudentGender(e.target.value)
-                            }
-                          >
-                            <option value="">선택</option>
-                            <option value="남">남</option>
-                            <option value="여">여</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {surveyStudents.length > 0 && (
-                    <div className="student-list-table">
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>학번</th>
-                            <th>이름</th>
-                            <th>성별</th>
-                            <th>작업</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {surveyStudents.map((student) => (
-                            <tr key={student.id}>
-                              <td>{student.id}</td>
-                              <td>{student.name}</td>
-                              <td>{student.gender}</td>
-                              <td>
-                                <button
-                                  className="btn-small btn-delete"
-                                  onClick={() =>
-                                    handleDeleteStudent(student.id)
-                                  }
-                                >
-                                  삭제
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="question-list">
-                <h4>📋 설문 질문 목록 (고정)</h4>
-                <div id="question-preview">
-                  {fixedQuestions.map((question, index) => (
-                    <div className="question-item" key={question.id}>
-                      <span className="question-text">
-                        {index + 1}. {question.text}
-                        <span
-                          className={`question-type-badge ${question.type}`}
-                        >
-                          {question.type === "multiple-choice"
-                            ? "객관식"
-                            : "주관식"}
-                        </span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="survey-form-actions">
-                <button
-                  className="btn-secondary"
-                  id="save-survey"
-                  onClick={handleSaveSurvey}
-                >
-                  💾 저장
-                </button>
-                <button
-                  className="btn-primary"
-                  id="deploy-survey"
-                  onClick={handleDeploySurvey}
-                >
-                  🚀 설문 배포 (링크 생성)
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div style={{ marginBottom: "20px" }}>
+        <button
+          className="btn-success"
+          onClick={handleInitializeExampleData}
+          style={{ fontSize: "14px", padding: "10px 20px" }}
+        >
+          예시 데이터 초기화 (학생 5명, 설문 완료 4명)
+        </button>
       </div>
-    </div>
+
+      <SurveyListTable
+        surveys={surveys}
+        onEdit={handleEditSurvey}
+        onDelete={handleDeleteSurvey}
+      />
+
+      <SurveyForm
+        title={surveyTitle}
+        deadline={surveyDeadline}
+        students={surveyStudents}
+        questions={fixedQuestions}
+        newStudentId={newStudentId}
+        newStudentName={newStudentName}
+        newStudentGender={newStudentGender}
+        onTitleChange={setSurveyTitle}
+        onDeadlineChange={setSurveyDeadline}
+        onStudentIdChange={setNewStudentId}
+        onStudentNameChange={setNewStudentName}
+        onStudentGenderChange={setNewStudentGender}
+        onAddStudent={handleAddStudent}
+        onDeleteStudent={handleDeleteStudent}
+        onUploadExcel={handleUploadExcel}
+        onSave={handleSaveSurvey}
+        onDeploy={handleDeploySurvey}
+      />
+    </AdminLayout>
   );
 }

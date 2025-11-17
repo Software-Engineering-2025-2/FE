@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import AdminLayout from "../components/common/AdminLayout";
+import SurveySelector from "../components/Matching/SurveySelector";
+import MatchingStats from "../components/Matching/MatchingStats";
+import MatchingAction from "../components/Matching/MatchingAction";
 import "../styles/dashboard.css";
+import "../styles/survey.css";
 
 interface Survey {
   id: number;
@@ -38,7 +42,6 @@ interface SurveyResponse {
 }
 
 export default function Matching() {
-  const location = useLocation();
   const [isRunning, setIsRunning] = useState(false);
   const [matchingStatus, setMatchingStatus] = useState<string>("");
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
@@ -208,160 +211,40 @@ export default function Matching() {
     : { total: 0, completed: 0, rate: 0 };
 
   return (
-    <div id="matching" className="dashboard-page">
-      <div className="dashboard-content">
-        <div className="dashboard">
-          <div className="sidebar">
-            <div className="sidebar-header">
-              <div className="sidebar-header-title">메뉴</div>
-              <div className="sidebar-admin-info">
-                <div className="admin-name">
-                  관리자: {localStorage.getItem("adminEmail") || "홍길동님"}
-                </div>
-                <button
-                  className="sidebar-logout-btn"
-                  onClick={() => {
-                    localStorage.removeItem("isAdmin");
-                    localStorage.removeItem("adminEmail");
-                    window.location.href = "/login";
-                  }}
-                >
-                  로그아웃
-                </button>
+    <AdminLayout>
+      <div className="page-title">매칭 실행</div>
+
+      <div className="matching-info-section">
+        <SurveySelector
+          surveys={activeSurveys}
+          selectedSurveyId={selectedSurveyId}
+          onSelectChange={setSelectedSurveyId}
+        />
+
+        {selectedSurveyId && (
+          <>
+            <MatchingStats
+              total={stats.total}
+              completed={stats.completed}
+              rate={stats.rate}
+            />
+
+            {stats.completed < 2 && (
+              <div className="alert alert-error">
+                매칭을 실행하려면 최소 2명 이상의 학생이 설문을 완료해야 합니다.
               </div>
-            </div>
-            <ul className="sidebar-menu">
-              <li>
-                <Link
-                  to="/dashboard"
-                  className={location.pathname === "/dashboard" ? "active" : ""}
-                >
-                  📋 학생 목록 관리
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/survey-management"
-                  className={
-                    location.pathname === "/survey-management" ? "active" : ""
-                  }
-                >
-                  📝 매칭 설문 관리
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/matching"
-                  className={location.pathname === "/matching" ? "active" : ""}
-                >
-                  ⚡ 매칭 실행
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/results"
-                  className={location.pathname === "/results" ? "active" : ""}
-                >
-                  📊 매칭 결과 보기
-                </Link>
-              </li>
-            </ul>
-          </div>
+            )}
 
-          <div className="main-content">
-            <div className="page-title">매칭 실행</div>
-
-            <div className="matching-info-section">
-              <div className="form-group">
-                <label>매칭할 설문 선택</label>
-                {activeSurveys.length === 0 ? (
-                  <div className="alert alert-info">
-                    활성화된 설문이 없습니다. 먼저 설문 관리에서 설문을 생성하고
-                    배포해주세요.
-                  </div>
-                ) : (
-                  <select
-                    className="form-group input"
-                    value={selectedSurveyId || ""}
-                    onChange={(e) =>
-                      setSelectedSurveyId(Number(e.target.value))
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <option value="">설문을 선택하세요</option>
-                    {activeSurveys.map((survey) => (
-                      <option key={survey.id} value={survey.id}>
-                        {survey.title} (마감: {survey.deadline})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {selectedSurveyId && (
-                <>
-                  <div className="info-card">
-                    <h3>📊 설문 현황</h3>
-                    <div className="info-stats">
-                      <div className="stat-item">
-                        <span className="stat-label">전체 학생 수</span>
-                        <span className="stat-value">{stats.total}명</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">설문 완료</span>
-                        <span className="stat-value">{stats.completed}명</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">응답률</span>
-                        <span className="stat-value">{stats.rate}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {stats.completed < 2 && (
-                    <div className="alert alert-error">
-                      매칭을 실행하려면 최소 2명 이상의 학생이 설문을 완료해야
-                      합니다.
-                    </div>
-                  )}
-
-                  {stats.completed >= 2 && (
-                    <div className="matching-action-section">
-                      <p className="matching-description">
-                        선택한 설문의 응답을 기반으로 최적의 룸메이트 매칭을
-                        실행합니다.
-                        <br />
-                        매칭이 완료되면 결과 페이지로 이동합니다.
-                      </p>
-                      <button
-                        className="btn-primary"
-                        onClick={handleRunMatching}
-                        disabled={isRunning}
-                        style={{ fontSize: "18px", padding: "16px 32px" }}
-                      >
-                        {isRunning ? "매칭 실행 중..." : "⚡ 매칭 실행"}
-                      </button>
-                      {matchingStatus && (
-                        <div
-                          className={`alert ${
-                            isRunning ? "alert-info" : "alert-success"
-                          }`}
-                        >
-                          {matchingStatus}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+            {stats.completed >= 2 && (
+              <MatchingAction
+                isRunning={isRunning}
+                status={matchingStatus}
+                onRun={handleRunMatching}
+              />
+            )}
+          </>
+        )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

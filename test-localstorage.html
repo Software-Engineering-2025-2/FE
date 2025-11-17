@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage Test</title>
+</head>
+<body>
+    <h1>LocalStorage Test</h1>
+    <button onclick="checkData()">데이터 확인</button>
+    <button onclick="clearData()">데이터 초기화</button>
+    <pre id="output"></pre>
+    <script>
+        function checkData() {
+            const surveys = localStorage.getItem('surveys');
+            const response1 = localStorage.getItem('survey_1_2021112018');
+            const response2 = localStorage.getItem('survey_1_2021112019');
+            const response3 = localStorage.getItem('survey_1_2021112020');
+            
+            document.getElementById('output').textContent = JSON.stringify({
+                surveys: surveys ? JSON.parse(surveys) : null,
+                response1: response1 ? JSON.parse(response1) : null,
+                response2: response2 ? JSON.parse(response2) : null,
+                response3: response3 ? JSON.parse(response3) : null
+            }, null, 2);
+        }
+        
+        function clearData() {
+            localStorage.clear();
+            alert('초기화 완료');
+        }
+    </script>
+</body>
+</html>

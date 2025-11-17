@@ -169,3 +169,11 @@
   line-height: 1.6;
   margin-bottom: 24px;
 }
+
+.matching-action-section button {
+  margin-bottom: 24px;
+}
+
+.matching-action-section .alert {
+  margin-top: 24px;
+}
